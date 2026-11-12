@@ -1,0 +1,9 @@
+{
+  "name": "Smart RT",
+  "short_name": "SmartRT",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f5f7",
+  "theme_color": "#172b43",
+  "lang": "id"
+}
