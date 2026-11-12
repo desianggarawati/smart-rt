@@ -33,6 +33,9 @@ export default function App(){
   return ()=>subscription.unsubscribe();
  },[]);
  useEffect(()=>{
+  if(session?.user.user_metadata?.full_name){setForm(old=>({...old,full_name:old.full_name||String(session.user.user_metadata.full_name)}));}
+ },[session?.user.id]);
+ useEffect(()=>{
   if(!supabase)return;
   supabase.from("houses").select("id,code").eq("active",true).order("code").then(({data})=>setHouses((data||[]) as House[]));
  },[session]);
@@ -65,8 +68,7 @@ export default function App(){
   e.preventDefault();if(!supabase)return;setBusy(true);setError("");
   const {data,error:err}=await supabase.auth.signUp({email:form.email,password:form.password,options:{data:{full_name:form.full_name}}});
   if(err){setError(err.message);setBusy(false);return;}
-  if(!data.session){setError("Akun dibuat. Periksa email untuk verifikasi, lalu login untuk menyelesaikan registrasi.");setBusy(false);return;}
-  await submitRequest(data.user?.id||data.session.user.id);
+  if(!data.session){setError("Akun dibuat. Periksa email untuk verifikasi, lalu login dan lengkapi data rumah.");}
   setBusy(false);
  }
  async function submitRequest(userId:string){
@@ -95,7 +97,7 @@ export default function App(){
  if(loading)return <div className="min-h-screen grid place-items-center">Memuat Smart RT…</div>;
  if(!configured)return <div className="min-h-screen grid place-items-center p-6"><div className="max-w-md bg-white p-6 rounded-2xl shadow-sm"><h1 className="text-xl font-bold">Smart RT Foundation</h1><p className="mt-3 text-sm">Koneksi Supabase belum dikonfigurasi. Isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY di pengaturan lingkungan hosting.</p></div></div>;
  if(!session)return <div className="min-h-screen flex justify-center items-center p-4"><div className="w-full max-w-md rounded-3xl bg-white shadow-sm overflow-hidden"><div className="bg-navy text-white p-7"><div className="flex items-center gap-2"><Home/><strong className="text-xl">smartRT</strong></div><h1 className="text-2xl font-bold mt-8">{authMode==="login"?"Selamat datang kembali":"Daftar sebagai warga"}</h1><p className="text-slate-300 mt-2">Administrasi lingkungan yang lebih mudah.</p></div><form className="p-6 space-y-3" onSubmit={authMode==="login"?signIn:register}>
- {authMode==="register"&&<><label className="block text-sm">Nama lengkap<input required className="field" value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})}/></label><label className="block text-sm">Nomor HP<input required className="field" type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label className="block text-sm">Nomor rumah<select required className="field" value={form.house_id} onChange={e=>setForm({...form,house_id:e.target.value})}><option value="">Pilih rumah</option>{houses.map(h=><option key={h.id} value={h.id}>{h.code}</option>)}</select></label><label className="block text-sm">Tipe penghuni<select className="field" value={form.resident_type} onChange={e=>setForm({...form,resident_type:e.target.value})}><option value="permanent">Penghuni tetap</option><option value="temporary">Penghuni kontrak</option></select></label></>}
+ {authMode==="register"&&<><label className="block text-sm">Nama lengkap<input required className="field" value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})}/></label><p className="text-sm text-slate-500">Nomor HP dan pilihan rumah diisi setelah masuk, agar datanya bisa diverifikasi pengurus.</p></>}
  <label className="block text-sm">Email<input required type="email" className="field" autoComplete="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label className="block text-sm">Password<input required type="password" minLength={8} className="field" autoComplete={authMode==="login"?"current-password":"new-password"} value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/></label>
  {error&&<p role="status" className="text-sm text-amber-800 bg-amber-50 p-3 rounded-lg">{error}</p>}<button disabled={busy} className="primary w-full">{busy?"Memproses…":authMode==="login"?"Masuk":"Buat akun"}</button><button type="button" className="w-full text-teal text-sm py-2" onClick={()=>{setAuthMode(authMode==="login"?"register":"login");setError("")}}>{authMode==="login"?"Belum punya akun? Daftar":"Sudah punya akun? Masuk"}</button></form></div></div>;
  return <div className="min-h-screen max-w-lg mx-auto bg-white shadow-sm pb-24"><header className="bg-navy text-white p-6 rounded-b-3xl"><div className="flex justify-between items-center"><div className="flex items-center gap-2"><Home/><strong className="text-xl">smartRT</strong></div><div className="flex items-center gap-3"><Bell size={19}/><button aria-label="Keluar" onClick={logout}><LogOut size={19}/></button></div></div><p className="text-slate-300 text-sm mt-6">Selamat datang,</p><h1 className="text-2xl font-bold">{profile?.full_name||session.user.email}</h1><p className="text-slate-200 text-sm mt-1">Rumah {profile?.house?.code||"Belum terdaftar"} · {isAdmin?"Super Admin":residentType(profile?.resident_type||"permanent")}</p></header>
