@@ -2,8 +2,17 @@
   "name": "Smart RT",
   "short_name": "SmartRT",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f2f5f7",
   "theme_color": "#172b43",
-  "lang": "id"
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
